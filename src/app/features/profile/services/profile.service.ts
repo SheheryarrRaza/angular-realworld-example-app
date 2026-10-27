@@ -22,6 +22,12 @@ export class ProfileService {
     );
   }
 
+  getFavoritesCount(): Observable<number> {
+    return this.http
+      .get<{ favoritesCount: number }>('/user/favorites/count')
+      .pipe(map((data: { favoritesCount: number }) => data.favoritesCount));
+  }
+
   follow(username: string): Observable<Profile> {
     return this.http
       .post<{ profile: Profile }>('/profiles/' + username + '/follow', {})

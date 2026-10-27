@@ -138,6 +138,23 @@ describe('ProfileService', () => {
     });
   });
 
+  describe('getFavoritesCount', () => {
+    it('should GET /user/favorites/count and emit the number', async () => {
+      const promise = firstValueFrom(service.getFavoritesCount());
+      const req = httpMock.expectOne('/user/favorites/count');
+      expect(req.request.method).toBe('GET');
+      req.flush({ favoritesCount: 12 });
+      expect(await promise).toBe(12);
+    });
+
+    it('should propagate errors', async () => {
+      const promise = firstValueFrom(service.getFavoritesCount());
+      const req = httpMock.expectOne('/user/favorites/count');
+      req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+      await expect(promise).rejects.toMatchObject({ status: 401 });
+    });
+  });
+
   describe('follow', () => {
     it('should follow a user', async () => {
       const username = 'usertofollow';

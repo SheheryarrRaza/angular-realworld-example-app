@@ -29,6 +29,7 @@ export class ProfileComponent implements OnInit {
   profile = signal<Profile | null>(null);
   isUser = signal(false);
   errors = signal<Errors | null>(null);
+  favoritesCount = signal<number | null>(null);
   destroyRef = inject(DestroyRef);
 
   constructor(
@@ -53,8 +54,24 @@ export class ProfileComponent implements OnInit {
       )
       .subscribe(([profile, user]) => {
         this.profile.set(profile);
-        this.isUser.set(profile.username === user?.username);
+        const isUser = profile.username === user?.username;
+        this.isUser.set(isUser);
+        if (isUser) {
+          this.loadFavoritesCount();
+        } else {
+          this.favoritesCount.set(null);
+        }
       });
+  }
+
+  private loadFavoritesCount() {
+    this.profileService
+      .getFavoritesCount()
+      .pipe(
+        catchError(() => of(null)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(count => this.favoritesCount.set(count));
   }
 
   onToggleFollowing(profile: Profile) {

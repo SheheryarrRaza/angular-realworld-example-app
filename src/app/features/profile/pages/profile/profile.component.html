@@ -52,6 +52,9 @@
                   [routerLink]="['/profile', p.username, 'favorites']"
                 >
                   Favorited Posts
+                  @if (isUser() && favoritesCount() !== null) {
+                    ({{ favoritesCount() }})
+                  }
                 </a>
               </li>
             </ul>
