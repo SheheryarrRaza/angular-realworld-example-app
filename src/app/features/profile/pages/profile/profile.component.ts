@@ -9,6 +9,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FollowButtonComponent } from '../../components/follow-button.component';
 import { Errors } from '../../../../core/models/errors.model';
 import { ListErrorsComponent } from '../../../../shared/components/list-errors.component';
+import { FavoritesCountService } from '../../../article/services/favorites-count.service';
 import { DefaultImagePipe } from '../../../../shared/pipes/default-image.pipe';
 
 @Component({
@@ -30,6 +31,7 @@ export class ProfileComponent implements OnInit {
   isUser = signal(false);
   errors = signal<Errors | null>(null);
   destroyRef = inject(DestroyRef);
+  favoritesCount = inject(FavoritesCountService);
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -54,6 +56,11 @@ export class ProfileComponent implements OnInit {
       .subscribe(([profile, user]) => {
         this.profile.set(profile);
         this.isUser.set(profile.username === user?.username);
+        if (this.isUser()) {
+          this.favoritesCount.load().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+        } else {
+          this.favoritesCount.clear();
+        }
       });
   }
 

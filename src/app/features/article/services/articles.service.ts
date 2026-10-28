@@ -1,13 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { ArticleListConfig } from '../models/article-list-config.model';
 import { Article } from '../models/article.model';
+import { FavoritesCountService } from './favorites-count.service';
 
 @Injectable({ providedIn: 'root' })
 export class ArticlesService {
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly favoritesCount: FavoritesCountService,
+  ) {}
 
   query(config: ArticleListConfig): Observable<{ articles: Article[]; articlesCount: number }> {
     // Convert any filters over to Angular's URLSearchParams
@@ -45,10 +49,13 @@ export class ArticlesService {
   }
 
   favorite(slug: string): Observable<Article> {
-    return this.http.post<{ article: Article }>(`/articles/${slug}/favorite`, {}).pipe(map(data => data.article));
+    return this.http.post<{ article: Article }>(`/articles/${slug}/favorite`, {}).pipe(
+      map(data => data.article),
+      tap(() => this.favoritesCount.adjust(1)),
+    );
   }
 
   unfavorite(slug: string): Observable<void> {
-    return this.http.delete<void>(`/articles/${slug}/favorite`);
+    return this.http.delete<void>(`/articles/${slug}/favorite`).pipe(tap(() => this.favoritesCount.adjust(-1)));
   }
 }
