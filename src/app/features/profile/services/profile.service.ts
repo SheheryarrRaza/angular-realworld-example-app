@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { map, shareReplay, tap } from 'rxjs/operators';
 import { Profile } from '../models/profile.model';
+import { ProfileCounts } from '../models/profile-counts.model';
 import { HttpClient } from '@angular/common/http';
 
 /**
@@ -13,6 +14,9 @@ import { HttpClient } from '@angular/common/http';
  */
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
+  /** Incremented every time the signed-in user's favourites are cleared, so open lists can reload. */
+  readonly favoritesCleared = signal(0);
+
   constructor(private readonly http: HttpClient) {}
 
   get(username: string): Observable<Profile> {
@@ -32,5 +36,15 @@ export class ProfileService {
     return this.http
       .delete<{ profile: Profile }>('/profiles/' + username + '/follow')
       .pipe(map((data: { profile: Profile }) => data.profile));
+  }
+
+  getCounts(username: string): Observable<ProfileCounts> {
+    return this.http
+      .get<{ counts: ProfileCounts }>('/profiles/' + encodeURIComponent(username) + '/counts')
+      .pipe(map((data: { counts: ProfileCounts }) => data.counts));
+  }
+
+  clearFavorites(): Observable<void> {
+    return this.http.delete<void>('/user/favorites').pipe(tap(() => this.favoritesCleared.update(n => n + 1)));
   }
 }
