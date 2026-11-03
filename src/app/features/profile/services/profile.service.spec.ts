@@ -269,6 +269,41 @@ describe('ProfileService', () => {
     });
   });
 
+  describe('getCounts', () => {
+    it('should request counts and unwrap the response', async () => {
+      const promise = firstValueFrom(service.getCounts('testuser'));
+      const req = httpMock.expectOne('/profiles/testuser/counts');
+      expect(req.request.method).toBe('GET');
+      req.flush({ counts: { favoritesCount: 3, bookmarksCount: null } });
+      expect(await promise).toEqual({ favoritesCount: 3, bookmarksCount: null });
+    });
+
+    it('should propagate a 404 for an unknown user', async () => {
+      const promise = firstValueFrom(service.getCounts('nobody'));
+      httpMock.expectOne('/profiles/nobody/counts').flush('Not found', { status: 404, statusText: 'Not Found' });
+      await expect(promise).rejects.toMatchObject({ status: 404 });
+    });
+  });
+
+  describe('clearFavorites', () => {
+    it('should send DELETE and bump favoritesCleared', async () => {
+      expect(service.favoritesCleared()).toBe(0);
+      const promise = firstValueFrom(service.clearFavorites(), { defaultValue: undefined });
+      const req = httpMock.expectOne('/user/favorites');
+      expect(req.request.method).toBe('DELETE');
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await promise;
+      expect(service.favoritesCleared()).toBe(1);
+    });
+
+    it('should not bump favoritesCleared on error', async () => {
+      const promise = firstValueFrom(service.clearFavorites());
+      httpMock.expectOne('/user/favorites').flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+      await expect(promise).rejects.toMatchObject({ status: 401 });
+      expect(service.favoritesCleared()).toBe(0);
+    });
+  });
+
   describe('Integration scenarios', () => {
     it('should handle follow then unfollow sequence', async () => {
       const username = 'testuser';

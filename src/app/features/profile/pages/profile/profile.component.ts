@@ -4,6 +4,7 @@ import { catchError, switchMap } from 'rxjs/operators';
 import { combineLatest, EMPTY, of } from 'rxjs';
 import { UserService } from '../../../../core/auth/services/user.service';
 import { Profile } from '../../models/profile.model';
+import { ProfileCounts } from '../../models/profile-counts.model';
 import { ProfileService } from '../../services/profile.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FollowButtonComponent } from '../../components/follow-button.component';
@@ -27,6 +28,7 @@ import { DefaultImagePipe } from '../../../../shared/pipes/default-image.pipe';
 })
 export class ProfileComponent implements OnInit {
   profile = signal<Profile | null>(null);
+  counts = signal<ProfileCounts | null>(null);
   isUser = signal(false);
   errors = signal<Errors | null>(null);
   destroyRef = inject(DestroyRef);
@@ -54,6 +56,36 @@ export class ProfileComponent implements OnInit {
       .subscribe(([profile, user]) => {
         this.profile.set(profile);
         this.isUser.set(profile.username === user?.username);
+        this.loadCounts(profile.username);
+      });
+  }
+
+  loadCounts(username: string) {
+    this.profileService
+      .getCounts(username)
+      .pipe(
+        catchError(error => {
+          this.errors.set(error.errors || { error: ['Failed to load profile counts'] });
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(counts => this.counts.set(counts));
+  }
+
+  onClearFavorites(profile: Profile) {
+    if (!window.confirm('Remove all of your favourites? This cannot be undone.')) {
+      return;
+    }
+    this.profileService
+      .clearFavorites()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.errors.set(null);
+          this.loadCounts(profile.username);
+        },
+        error: error => this.errors.set(error.errors || { error: ['Failed to clear favourites'] }),
       });
   }
 

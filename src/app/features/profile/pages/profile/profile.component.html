@@ -16,6 +16,14 @@
             <img [src]="p.image | defaultImage" class="user-img" />
             <h4>{{ p.username }}</h4>
             <p>{{ p.bio ?? '' }}</p>
+            @if (counts(); as c) {
+              <p class="profile-counts">
+                <span class="favorites-count">{{ c.favoritesCount }} favorited</span>
+                @if (isUser() && c.bookmarksCount !== null) {
+                  <span class="bookmarks-count"> · {{ c.bookmarksCount }} bookmarked</span>
+                }
+              </p>
+            }
             @if (!isUser()) {
               <app-follow-button [profile]="p" (toggle)="onToggleFollowing($event)" />
             }
@@ -23,6 +31,9 @@
               <a [routerLink]="['/settings']" class="btn btn-sm btn-outline-secondary action-btn">
                 <i class="ion-gear-a"></i> Edit Profile Settings
               </a>
+              <button type="button" class="btn btn-sm btn-outline-danger action-btn" (click)="onClearFavorites(p)">
+                <i class="ion-heart-broken"></i> Clear my favourites
+              </button>
             }
           </div>
         </div>

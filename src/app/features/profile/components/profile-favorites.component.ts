@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  OnInit,
+  signal,
+  untracked,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ArticleListComponent } from '../../article/components/article-list.component';
 import { ProfileService } from '../services/profile.service';
@@ -22,7 +31,16 @@ export default class ProfileFavoritesComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private readonly profileService: ProfileService,
-  ) {}
+  ) {
+    // Reload the list when the signed-in user clears their favourites.
+    effect(() => {
+      this.profileService.favoritesCleared();
+      const profile = untracked(() => this.profile());
+      if (profile) {
+        this.favoritesConfig.set(this.buildConfig(profile));
+      }
+    });
+  }
 
   ngOnInit() {
     this.profileService
@@ -31,13 +49,17 @@ export default class ProfileFavoritesComponent implements OnInit {
       .subscribe({
         next: (profile: Profile) => {
           this.profile.set(profile);
-          this.favoritesConfig.set({
-            type: 'all',
-            filters: {
-              favorited: profile.username,
-            },
-          });
+          this.favoritesConfig.set(this.buildConfig(profile));
         },
       });
+  }
+
+  private buildConfig(profile: Profile): ArticleListConfig {
+    return {
+      type: 'all',
+      filters: {
+        favorited: profile.username,
+      },
+    };
   }
 }
