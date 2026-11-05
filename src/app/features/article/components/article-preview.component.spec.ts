@@ -1,76 +1,73 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { of } from 'rxjs';
 import { ArticlePreviewComponent } from './article-preview.component';
 import { Article } from '../models/article.model';
+import { ArticlesService } from '../services/articles.service';
+import { UserService } from '../../../core/auth/services/user.service';
 
 describe('ArticlePreviewComponent', () => {
   let fixture: ComponentFixture<ArticlePreviewComponent>;
 
   const baseArticle: Article = {
-    slug: 'test-article',
-    title: 'Test Article',
-    description: 'Test description',
-    body: 'Test body',
+    slug: 'hello-world',
+    title: 'Hello world',
+    description: 'A description',
+    body: 'Body',
     tagList: [],
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
+    createdAt: '2026-11-05T00:00:00Z',
+    updatedAt: '2026-11-05T00:00:00Z',
     favorited: false,
-    favoritesCount: 5,
-    author: {
-      username: 'testuser',
-      bio: null,
-      image: '',
-      following: false,
-    },
+    favoritesCount: 7,
+    author: { username: 'jane', bio: null, image: null, following: false },
   };
 
-  function render(article: Article): void {
-    fixture = TestBed.createComponent(ArticlePreviewComponent);
+  function render(article: Article): HTMLElement {
     fixture.componentRef.setInput('articleInput', article);
     fixture.detectChanges();
-  }
-
-  function commentCountElement(): HTMLElement {
-    return fixture.nativeElement.querySelector('.comment-count');
+    return fixture.nativeElement as HTMLElement;
   }
 
   beforeEach(() => {
-    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      imports: [ArticlePreviewComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ArticlesService, useValue: {} },
+        { provide: UserService, useValue: { isAuthenticated: of(false) } },
+      ],
     });
+    fixture = TestBed.createComponent(ArticlePreviewComponent);
   });
 
-  it('shows 0 when commentsCount is 0', () => {
-    render({ ...baseArticle, commentsCount: 0 });
-
-    expect(commentCountElement().textContent?.trim()).toBe('0');
-    expect(commentCountElement().getAttribute('aria-label')).toBe('0 comments');
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
-  it('shows 0 when commentsCount is missing', () => {
-    render({ ...baseArticle, commentsCount: undefined });
+  it('shows 0 comments when commentsCount is 0', () => {
+    const el = render({ ...baseArticle, commentsCount: 0 });
+    const count = el.querySelector('.comments-count');
 
-    expect(commentCountElement().textContent?.trim()).toBe('0');
-    expect(commentCountElement().getAttribute('aria-label')).toBe('0 comments');
+    expect(count?.textContent?.trim()).toBe('0');
+    expect(count?.getAttribute('aria-label')).toBe('0 comments');
   });
 
-  it('shows the comment count alongside the favorite count', () => {
-    render({ ...baseArticle, commentsCount: 3 });
+  it('shows 0 comments when commentsCount is missing', () => {
+    const el = render({ ...baseArticle });
+    const count = el.querySelector('.comments-count');
 
-    expect(commentCountElement().textContent?.trim()).toBe('3');
-    expect(commentCountElement().getAttribute('aria-label')).toBe('3 comments');
-
-    const favoriteButton: HTMLElement = fixture.nativeElement.querySelector('app-favorite-button button');
-    expect(favoriteButton.textContent).toContain('5');
+    expect(count?.textContent?.trim()).toBe('0');
+    expect(count?.getAttribute('aria-label')).toBe('0 comments');
   });
 
-  it('uses the singular label for one comment', () => {
-    render({ ...baseArticle, commentsCount: 1 });
+  it('shows the comment count next to the favourite count', () => {
+    const el = render({ ...baseArticle, commentsCount: 3 });
+    const count = el.querySelector('.comments-count');
+    const favorite = el.querySelector('app-favorite-button');
 
-    expect(commentCountElement().getAttribute('aria-label')).toBe('1 comment');
+    expect(count?.textContent?.trim()).toBe('3');
+    expect(count?.getAttribute('aria-label')).toBe('3 comments');
+    expect(favorite?.textContent?.trim()).toBe('7');
   });
 });

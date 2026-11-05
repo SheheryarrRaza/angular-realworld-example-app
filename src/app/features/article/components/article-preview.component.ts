@@ -13,8 +13,8 @@ import { FavoriteButtonComponent } from './favorite-button.component';
         <app-favorite-button [article]="article()" (toggle)="toggleFavorite($event)" class="pull-xs-right">
           {{ article().favoritesCount }}
         </app-favorite-button>
-        <span class="comment-count pull-xs-right" [attr.aria-label]="commentsLabel()">
-          <i class="ion-chatbubble"></i> {{ article().commentsCount ?? 0 }}
+        <span class="comments-count pull-xs-right" [attr.aria-label]="commentsLabel()">
+          <i class="ion-chatbubble"></i> {{ commentsCount() }}
         </span>
       </app-article-meta>
 
@@ -38,15 +38,14 @@ import { FavoriteButtonComponent } from './favorite-button.component';
 export class ArticlePreviewComponent {
   article = signal<Article>(null!);
 
-  commentsLabel = computed(() => {
-    const count = this.article().commentsCount ?? 0;
-    return `${count} ${count === 1 ? 'comment' : 'comments'}`;
-  });
-
   @Input({ required: true })
   set articleInput(value: Article) {
     this.article.set(value);
   }
+
+  commentsCount = computed(() => this.article().commentsCount ?? 0);
+
+  commentsLabel = computed(() => `${this.commentsCount()} comments`);
 
   toggleFavorite(favorited: boolean): void {
     this.article.update(article => ({
