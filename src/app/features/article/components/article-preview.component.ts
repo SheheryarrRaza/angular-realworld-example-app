@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, Input, signal } from '@angular/core';
 import { Article } from '../models/article.model';
 import { ArticleMetaComponent } from './article-meta.component';
 import { RouterLink } from '@angular/router';
@@ -13,6 +13,9 @@ import { FavoriteButtonComponent } from './favorite-button.component';
         <app-favorite-button [article]="article()" (toggle)="toggleFavorite($event)" class="pull-xs-right">
           {{ article().favoritesCount }}
         </app-favorite-button>
+        <span class="comments-count pull-xs-right" [attr.aria-label]="commentsLabel()">
+          <i class="ion-chatbubble"></i> {{ commentsCount() }}
+        </span>
       </app-article-meta>
 
       <a [routerLink]="['/article', article().slug]" class="preview-link">
@@ -39,6 +42,10 @@ export class ArticlePreviewComponent {
   set articleInput(value: Article) {
     this.article.set(value);
   }
+
+  commentsCount = computed(() => this.article().commentsCount ?? 0);
+
+  commentsLabel = computed(() => `${this.commentsCount()} comments`);
 
   toggleFavorite(favorited: boolean): void {
     this.article.update(article => ({
