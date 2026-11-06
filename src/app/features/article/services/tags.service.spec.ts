@@ -16,6 +16,10 @@ describe('TagsService', () => {
   let httpMock: HttpTestingController;
 
   const mockTags: string[] = ['angular', 'typescript', 'testing', 'rxjs', 'javascript'];
+  const tagResponse = (tags: string[]) => ({
+    tags,
+    tagCounts: tags.map((tag, index) => ({ tag, count: index + 1 })),
+  });
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -41,16 +45,16 @@ describe('TagsService', () => {
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
       expect(req.request.method).toBe('GET');
-      req.flush({ tags: mockTags });
+      req.flush(tagResponse(mockTags));
       const tags = await promise;
-      expect(tags).toEqual(mockTags);
+      expect(tags).toEqual(tagResponse(mockTags).tagCounts);
       expect(tags.length).toBe(5);
     });
 
     it('should extract tags array from response wrapper', async () => {
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: mockTags });
+      req.flush(tagResponse(mockTags));
       const tags = await promise;
       expect(Array.isArray(tags)).toBe(true);
       expect((tags as any).tags).toBeUndefined();
@@ -59,7 +63,7 @@ describe('TagsService', () => {
     it('should handle empty tags list', async () => {
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: [] });
+      req.flush(tagResponse([]));
       const tags = await promise;
       expect(tags).toEqual([]);
       expect(tags.length).toBe(0);
@@ -69,9 +73,9 @@ describe('TagsService', () => {
       const singleTag = ['angular'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: singleTag });
+      req.flush(tagResponse(singleTag));
       const tags = await promise;
-      expect(tags).toEqual(singleTag);
+      expect(tags).toEqual(tagResponse(singleTag).tagCounts);
       expect(tags.length).toBe(1);
     });
 
@@ -79,74 +83,74 @@ describe('TagsService', () => {
       const manyTags = Array.from({ length: 100 }, (_, i) => `tag${i}`);
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: manyTags });
+      req.flush(tagResponse(manyTags));
       const tags = await promise;
       expect(tags.length).toBe(100);
-      expect(tags[0]).toBe('tag0');
-      expect(tags[99]).toBe('tag99');
+      expect(tags[0].tag).toBe('tag0');
+      expect(tags[99].tag).toBe('tag99');
     });
 
     it('should handle tags with special characters', async () => {
       const specialTags = ['c++', 'c#', 'node.js', 'vue.js', 'asp.net'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: specialTags });
+      req.flush(tagResponse(specialTags));
       const tags = await promise;
-      expect(tags).toEqual(specialTags);
+      expect(tags).toEqual(tagResponse(specialTags).tagCounts);
     });
 
     it('should handle tags with hyphens', async () => {
       const hyphenatedTags = ['web-development', 'machine-learning', 'test-driven-development'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: hyphenatedTags });
+      req.flush(tagResponse(hyphenatedTags));
       const tags = await promise;
-      expect(tags).toEqual(hyphenatedTags);
+      expect(tags).toEqual(tagResponse(hyphenatedTags).tagCounts);
     });
 
     it('should handle tags with underscores', async () => {
       const underscoredTags = ['web_dev', 'unit_testing', 'code_review'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: underscoredTags });
+      req.flush(tagResponse(underscoredTags));
       const tags = await promise;
-      expect(tags).toEqual(underscoredTags);
+      expect(tags).toEqual(tagResponse(underscoredTags).tagCounts);
     });
 
     it('should handle tags with numbers', async () => {
       const numberedTags = ['angular17', 'vue3', 'react18', 'node20'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: numberedTags });
+      req.flush(tagResponse(numberedTags));
       const tags = await promise;
-      expect(tags).toEqual(numberedTags);
+      expect(tags).toEqual(tagResponse(numberedTags).tagCounts);
     });
 
     it('should handle mixed case tags', async () => {
       const mixedCaseTags = ['Angular', 'TypeScript', 'JavaScript', 'RxJS'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: mixedCaseTags });
+      req.flush(tagResponse(mixedCaseTags));
       const tags = await promise;
-      expect(tags).toEqual(mixedCaseTags);
+      expect(tags).toEqual(tagResponse(mixedCaseTags).tagCounts);
     });
 
     it('should handle tags with spaces', async () => {
       const spacedTags = ['web development', 'machine learning', 'data science'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: spacedTags });
+      req.flush(tagResponse(spacedTags));
       const tags = await promise;
-      expect(tags).toEqual(spacedTags);
+      expect(tags).toEqual(tagResponse(spacedTags).tagCounts);
     });
 
     it('should handle duplicate tags', async () => {
       const duplicateTags = ['angular', 'angular', 'typescript', 'typescript'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: duplicateTags });
+      req.flush(tagResponse(duplicateTags));
       const tags = await promise;
-      expect(tags).toEqual(duplicateTags);
+      expect(tags).toEqual(tagResponse(duplicateTags).tagCounts);
       expect(tags.length).toBe(4);
     });
 
@@ -155,28 +159,28 @@ describe('TagsService', () => {
       const longTags = [longTag];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: longTags });
+      req.flush(tagResponse(longTags));
       const tags = await promise;
-      expect(tags[0]).toBe(longTag);
-      expect(tags[0].length).toBe(100);
+      expect(tags[0].tag).toBe(longTag);
+      expect(tags[0].tag.length).toBe(100);
     });
 
     it('should handle unicode characters in tags', async () => {
       const unicodeTags = ['日本語', '中文', 'español', 'français', '한국어'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: unicodeTags });
+      req.flush(tagResponse(unicodeTags));
       const tags = await promise;
-      expect(tags).toEqual(unicodeTags);
+      expect(tags).toEqual(tagResponse(unicodeTags).tagCounts);
     });
 
     it('should handle emoji in tags', async () => {
       const emojiTags = ['🚀 rocket', '💻 coding', '🎨 design', '📱 mobile'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: emojiTags });
+      req.flush(tagResponse(emojiTags));
       const tags = await promise;
-      expect(tags).toEqual(emojiTags);
+      expect(tags).toEqual(tagResponse(emojiTags).tagCounts);
     });
 
     it('should handle server error', async () => {
@@ -231,7 +235,7 @@ describe('TagsService', () => {
       service.getAll().subscribe();
       const requests = httpMock.match('/tags');
       expect(requests.length).toBe(1);
-      requests[0].flush({ tags: mockTags });
+      requests[0].flush(tagResponse(mockTags));
     });
 
     it('should handle multiple subscribers', () => {
@@ -242,15 +246,15 @@ describe('TagsService', () => {
       // Each subscription makes a new request (no shareReplay)
       const requests = httpMock.match('/tags');
       expect(requests.length).toBe(3);
-      requests.forEach(req => req.flush({ tags: mockTags }));
+      requests.forEach(req => req.flush(tagResponse(mockTags)));
     });
 
     it('should return observable that completes', async () => {
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: mockTags });
+      req.flush(tagResponse(mockTags));
       const tags = await promise;
-      expect(tags).toEqual(mockTags);
+      expect(tags).toEqual(tagResponse(mockTags).tagCounts);
     });
 
     it('should handle malformed response', async () => {
@@ -265,23 +269,23 @@ describe('TagsService', () => {
       }
     });
 
-    it('should handle null tags in response', async () => {
+    it('should handle null tag counts in response', async () => {
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: null });
+      req.flush({ tagCounts: null });
       const tags = await promise;
       expect(tags).toBeNull();
     });
 
-    it('should handle undefined tags in response', async () => {
+    it('should handle undefined tag counts in response', async () => {
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: undefined });
+      req.flush({ tagCounts: undefined });
       const tags = await promise;
       expect(tags).toBeUndefined();
     });
 
-    it('should handle response without tags property', async () => {
+    it('should handle response without tagCounts property', async () => {
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
       req.flush({});
@@ -294,14 +298,14 @@ describe('TagsService', () => {
     it('should fetch tags multiple times', async () => {
       const promise1 = firstValueFrom(service.getAll());
       const req1 = httpMock.expectOne('/tags');
-      req1.flush({ tags: mockTags });
+      req1.flush(tagResponse(mockTags));
       const tags1 = await promise1;
-      expect(tags1).toEqual(mockTags);
+      expect(tags1).toEqual(tagResponse(mockTags).tagCounts);
       const promise2 = firstValueFrom(service.getAll());
       const req2 = httpMock.expectOne('/tags');
-      req2.flush({ tags: mockTags });
+      req2.flush(tagResponse(mockTags));
       const tags2 = await promise2;
-      expect(tags2).toEqual(mockTags);
+      expect(tags2).toEqual(tagResponse(mockTags).tagCounts);
     });
 
     it('should handle rapid successive calls', () => {
@@ -310,7 +314,7 @@ describe('TagsService', () => {
       }
       const requests = httpMock.match('/tags');
       expect(requests.length).toBe(5);
-      requests.forEach(req => req.flush({ tags: mockTags }));
+      requests.forEach(req => req.flush(tagResponse(mockTags)));
     });
   });
 
@@ -319,47 +323,47 @@ describe('TagsService', () => {
       const emptyStringTags = ['', 'angular', '', 'typescript'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: emptyStringTags });
+      req.flush(tagResponse(emptyStringTags));
       const tags = await promise;
-      expect(tags).toEqual(emptyStringTags);
-      expect(tags[0]).toBe('');
-      expect(tags[2]).toBe('');
+      expect(tags).toEqual(tagResponse(emptyStringTags).tagCounts);
+      expect(tags[0].tag).toBe('');
+      expect(tags[2].tag).toBe('');
     });
 
     it('should handle tags with only whitespace', async () => {
       const whitespaceTags = ['   ', '\t', '\n', 'valid'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: whitespaceTags });
+      req.flush(tagResponse(whitespaceTags));
       const tags = await promise;
-      expect(tags).toEqual(whitespaceTags);
+      expect(tags).toEqual(tagResponse(whitespaceTags).tagCounts);
     });
 
     it('should handle tags with special URL characters', async () => {
       const urlCharTags = ['tag&param', 'tag?query', 'tag#hash', 'tag/path'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: urlCharTags });
+      req.flush(tagResponse(urlCharTags));
       const tags = await promise;
-      expect(tags).toEqual(urlCharTags);
+      expect(tags).toEqual(tagResponse(urlCharTags).tagCounts);
     });
 
     it('should handle tags with quotes', async () => {
       const quotedTags = ['"quoted"', "'single'", 'normal'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: quotedTags });
+      req.flush(tagResponse(quotedTags));
       const tags = await promise;
-      expect(tags).toEqual(quotedTags);
+      expect(tags).toEqual(tagResponse(quotedTags).tagCounts);
     });
 
     it('should handle tags with backslashes', async () => {
       const backslashTags = ['tag\\with\\backslash', 'normal'];
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: backslashTags });
+      req.flush(tagResponse(backslashTags));
       const tags = await promise;
-      expect(tags).toEqual(backslashTags);
+      expect(tags).toEqual(tagResponse(backslashTags).tagCounts);
     });
   });
 
@@ -368,7 +372,7 @@ describe('TagsService', () => {
       const largeTags = Array.from({ length: 1000 }, (_, i) => `tag${i}`);
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: largeTags });
+      req.flush(tagResponse(largeTags));
       const tags = await promise;
       expect(tags.length).toBe(1000);
     });
@@ -377,11 +381,11 @@ describe('TagsService', () => {
       const veryLongTags = Array.from({ length: 10000 }, (_, i) => `tag${i}`);
       const promise = firstValueFrom(service.getAll());
       const req = httpMock.expectOne('/tags');
-      req.flush({ tags: veryLongTags });
+      req.flush(tagResponse(veryLongTags));
       const tags = await promise;
       expect(tags.length).toBe(10000);
-      expect(tags[0]).toBe('tag0');
-      expect(tags[9999]).toBe('tag9999');
+      expect(tags[0].tag).toBe('tag0');
+      expect(tags[9999].tag).toBe('tag9999');
     });
   });
 });
