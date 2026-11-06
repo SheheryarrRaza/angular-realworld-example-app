@@ -57,10 +57,8 @@
           <p>Popular Tags</p>
 
           <div class="tag-list">
-            @for (tag of tags; track tag) {
-              <a class="tag-default tag-pill" [routerLink]="['/tag', tag]">
-                {{ tag }}
-              </a>
+            @for (tag of tags; track tag.tag) {
+              <a class="tag-default tag-pill" [routerLink]="['/tag', tag.tag]"> {{ tag.tag }} {{ tag.count }} </a>
             }
           </div>
 
